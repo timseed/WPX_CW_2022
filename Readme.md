@@ -27,6 +27,9 @@ There were 3,900,763 records submitted in this 48 hour period !! That's 22 spots
 
 ## DU Summary
 
+Source of Scores: [CQ World Wide WPX Contest - RAW 2022 CW](https://www.cqwpx.com/raw.htm?mode=cw&reg=DU&fbclid=IwAR2vneBY2AFg_rnfxGB3vYtTBYjRDS6qEivrP_X-mh99OxF7aPXSdwQVCJY)
+
+
 What caught my interest was my score, compared to the Low Power and the QRP - frankly there was not much difference in the scores.
 
 | Power         | Station         | RAW Score     |
@@ -81,31 +84,20 @@ du_10m_summary[du_10m_summary.Spotted_Count>10]
 
 Explanation: Group the stations (they are called Dx in the dataset), make a count, rename the column to something more sensible and show those who were spotted more than 10 times.
 
-|    | Call     |   Spotted_Count |
-|---:|:---------|----------------:|
-|  0 | DU3T     |            2834 |
-|  1 | 4D3X     |            1226 |
-|  2 | 4F3OM    |            1009 |
-|  3 | DU1WBX   |             842 |
-|  4 | 4I1EBC   |             789 |
-|  5 | DX9EVM   |             515 |
-|  6 | DV3A     |             497 |
-|  7 | DZ1QN    |             161 |
-|  8 | DU1VGX   |             147 |
-|  9 | 4E1AGW   |             140 |
-| 10 | 4F3BZ    |              99 |
-| 11 | DZ9W     |              71 |
-| 12 | 4F2KWT   |              59 |
-| 13 | N7ET/DU7 |              56 |
-| 14 | DU3TT    |              39 |
-| 15 | DU1EV    |              31 |
-| 16 | DU3TDU   |              15 |
-| 17 | 4F1OZ    |              13 |
-| 18 | DU8QT    |              12 |
+|    | Call   |   Spotted_Count |. Catagory |
+|---:|:-------|----------------:|----------|
+|  0 | 4F3OM  |            1009 | QRP 1 Band|
+|  1 | 4I1EBC |             789 | QRP 1 Band|
+|  2 | DU3T   |             500 | HP  All Band|
+|  3 | DV3A   |             488 | HP 1 Band |
+|  4 | DU1WBX |             256 | QRP 1 Band |
+|  5 | 4D3X   |             188 | LP All Band |
+|  6 | 4F3BZ  |              99 | LP 1 Band |
+|  7 | DU1EV  |              31 | HP 1 Band |
+|  8 | DU1VGX |              16 | Unknown |
+|  9 | DX9EVM |              13 | Multi-OP LP 1 Band |
 
-This looks about right, the DU3T (High Power ALl Bands) is at the top, 4D3X (LP All Bands), but then 4F3OM (QRP), 4I1EBC (QRP), DX9EVM (Multi-Single Low-Power),  DV3A (High Power). In 7th place is DZ1QN (All Band QRP).
-
-The other stations I am unaware of their catagory as they are unlisted on the WPX temporary score website.
+It's a little strange that the QRP stations are ahead of the HP/LP 1 Band stations in terms of spots. Maybe they are just calling CQ, and making no QSO's ? But their very high scores would suggest that is not the case.
 
 ## Group into HP, LP, QRP
 
