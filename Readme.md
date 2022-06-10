@@ -8,64 +8,24 @@ Please do not mis-take my surprise for jealousy or anything negative, I am truel
 
 # Background 
 
-As I run my own RBN data processed suite, I record all Spots that I am able to collect during the contest. I generally do not place any filters on the incoming data streams, as I apply my own set of data processing rules/validation before forwarding the Spots I think will be helpful to my own logging software (which I also wrote).
+The RBN offers a data download - so I grabbed the files from their site. 
 
-Why is this important to note ? Well, it means that I have a large volume of data that was publically published. This data, is usually available if you write to the Sys-Ops of the specific nodes. For RBN (Reverse Beacon Network) data - this is available in daily dumps from their web site.
+[May 28](http://www.reversebeacon.net/raw_data/dl.php?f=20220528)
 
-So - this data is publially available, and may show some insight.
+[May 29](http://www.reversebeacon.net/raw_data/dl.php?f=20220528)
 
+Unzip, and these files are CSV format - so you could process them in Excel (!! - not frankly a good idea, but you could).
 
-# ETL
-
-The data is in a little bit of a strange format, as the Telnet feeds allow automated and manual data. But 90% of the records are generally generated from CwSkimmer. 
-
-A Typical line of data looks like this 
-
-    # dxc.ve7cc.net,Low Close,DX de WC2L-#:     7004.1  YT2T         CW  5 dB 32 WPM CQ             2352Z
-    
-Becuase of my custom data-pipeline I know this means
-
-   - Source
-     -  dxc.ve7cc.net
-   - What Rule (my software) mached
-     -  Low Close
-   - Data
-     - The **Data Line** Exactly as placed into the Telnet System
+These files are joined (cat *.csv > WPX_CW_2022.csv) and then loaded into Pandas.
 
 
-### Data Line   
+# Analysis
 
-The **Data Line** has quite a large amount of information
+## Summary
 
-    - Who Spotted the call
-    - Frequency
-    - The Callsign that was Spotted
-    - Were they calling Running or Pouncing  (CQ or De)
-    - How loud they are (db)
-    - Cw Speed (Wpm)
+There were 3,900,763 records submitted in this 48 hour period !! That's 22 spots per second - Non-Stop.
 
-I load and as best as I can, clean this data up. 
-
-Then I augment the data by calculating the following (more can be added, but this seems enough for the time being).
-
-  - Spotter Country
-  - Spotter Continent
-  - Band (Convert khz to Band)
-  - Call Country
-  - Call Continent
-  
-  
-This data can be calculated using CTY.DAT published [
-CTY.DAT Format - Amateur Radio Country Fileshttps://www.country-files.com ](
-CTY.DAT Format - Amateur Radio Country Fileshttps://www.country-files.com ), and I have my own custom code to read this.
-
-With all the records enhanced I then remove the duplicates. Due to how the Telnet clusters are configured, aprox 4% of all 'Spots' are duplicates. So it is best to remove these.
-
-At this stage the ETL (Extract Translate and Load) phase is complete. So I save the output as a dataset (in Python this is called a Pickle File).
-
-## Analysis
-
-Loading the pickle file from before, I do some inital high level analysis, using data published at [https://www.cqwpx.com/raw.htm?mode=cw&reg=DU&fbclid=IwAR2vneBY2AFg_rnfxGB3vYtTBYjRDS6qEivrP_X-mh99OxF7aPXSdwQVCJY](https://www.cqwpx.com/raw.htm?mode=cw&reg=DU&fbclid=IwAR2vneBY2AFg_rnfxGB3vYtTBYjRDS6qEivrP_X-mh99OxF7aPXSdwQVCJY)
+## DU Summary
 
 What caught my interest was my score, compared to the Low Power and the QRP - frankly there was not much difference in the scores.
 
@@ -88,244 +48,132 @@ Just to add a reference - I then looked at the top Scores in Oceania - as the DU
 | Low 10M       | YD2UWF          | 111,510       |
 | QRP 10M       | YB3BOA          |   5,616       |
 
-### What's the big picture ?
 
-How many spots did the DU HP stations get ??
+For a better understanding - there were also 2 Multi-Band stations operating from Region 3, namely DU3T and 4D3X.
 
-| Call    | Spots |
-|---------|-------|
-| DV3A    | 79    |
-| DU1EV   | 12    |
+| Power         | Station         | RAW Score     |
+|:------------- |:---------------:| -------------:|
+| High Power All Band   | DU3T    |  2,776,518    |
+| Low Power All Band    | 4D3X    |  1,268,086    |
 
-Big difference, I am wondering if this is due to my own skimmer ?? [Which I have deliberatly tried to prevent from spotting myself]
+Both of which look like excellent scores to me.
 
-#### DV3A Spots by Country
+But, as I was only working on the 10m section, I will focus on this.
 
-|    | SpotterCountry       |   when |
-|---:|:---------------------|-------:|
-|  0 | Australia            |      2 |
-|  1 | Brazil               |      1 |
-|  2 | China                |     32 |
-|  3 | Czech Republic       |      2 |
-|  4 | Fed. Rep. of Germany |      4 |
-|  5 | Hungary              |      2 |
-|  6 | India                |      9 |
-|  7 | Japan                |     19 |
-|  8 | Namibia              |      2 |
-|  9 | Republic of Korea    |      1 |
-| 10 | Samoa                |      4 |
-| 11 | Thailand             |      1 |
+# 10M Data
 
-That looks ok.
-
-#### DU1EV Spots by Country
-
-|    | SpotterCountry       |   when |
-|---:|:---------------------|-------:|
-|  0 | Fed. Rep. of Germany |      3 |
-|  1 | Japan                |      4 |
-|  2 | Kazakhstan           |      2 |
-|  3 | Lithuania            |      1 |
-|  4 | Slovenia             |      1 |
-|  5 | Spain                |      1 |
+Filtering the data is easy. Just load the CSV files, and place a Band filter - at the same time, we can limit the country to DU by this 
 
 
-That seems strange - no JA, no BV - maybe my rules are at fault here.
+    DU_Spots_10M = contest[(contest.dx_pfx=='DU')&(contest.band=='10m')]
+
+This shows we have 3417 unique spots for DU stations on the 10M band.
+
+## Most Spotted DU Call 
+
+This will show which callsign has been spotted the most. Whilst it is not always the case, being spotted regularly and frequently usually results in you getting a better score. This is why self-spotting is banned !!
+
+```python
+du_10m_summary=DU_Spots_10M.groupby(['dx'])['callsign'].count().sort_values(ascending=False).reset_index()
+du_10m_summary.columns=['Call','Spotted_Count']
+du_10m_summary[du_10m_summary.Spotted_Count>10]
+```
+
+Explanation: Group the stations (they are called Dx in the dataset), make a count, rename the column to something more sensible and show those who were spotted more than 10 times.
+
+|    | Call     |   Spotted_Count |
+|---:|:---------|----------------:|
+|  0 | DU3T     |            2834 |
+|  1 | 4D3X     |            1226 |
+|  2 | 4F3OM    |            1009 |
+|  3 | DU1WBX   |             842 |
+|  4 | 4I1EBC   |             789 |
+|  5 | DX9EVM   |             515 |
+|  6 | DV3A     |             497 |
+|  7 | DZ1QN    |             161 |
+|  8 | DU1VGX   |             147 |
+|  9 | 4E1AGW   |             140 |
+| 10 | 4F3BZ    |              99 |
+| 11 | DZ9W     |              71 |
+| 12 | 4F2KWT   |              59 |
+| 13 | N7ET/DU7 |              56 |
+| 14 | DU3TT    |              39 |
+| 15 | DU1EV    |              31 |
+| 16 | DU3TDU   |              15 |
+| 17 | 4F1OZ    |              13 |
+| 18 | DU8QT    |              12 |
+
+This looks about right, the DU3T (High Power ALl Bands) is at the top, 4D3X (LP All Bands), but then 4F3OM (QRP), 4I1EBC (QRP), DX9EVM (Multi-Single Low-Power),  DV3A (High Power). In 7th place is DZ1QN (All Band QRP).
+
+The other stations I am unaware of their catagory as they are unlisted on the WPX temporary score website.
+
+## Group into HP, LP, QRP
+
+We now Group the data into the claimed power catagories.
+
+This is quite easy to accomplish...The date is rounded to the nearest 5 minutes. Whilst there is some possibilty of propogation changing in that time, the data records which match at a 1 minute time-interval are significantly lower.
+
+```python
+DU_QRP = contest[(contest.dx_pfx=='DU')&(contest.band=='10m') & ((contest.dx=='4E1ABC') |(contest.dx=='4F3OM'))]
+DU_HP = contest[(contest.dx_pfx=='DU')&(contest.band=='10m') & ((contest.dx=='DU3T') |(contest.dx=='DV3A')|(contest.dx=='DU1EV'))]
+DU_LP=contest[(contest.dx_pfx=='DU')&(contest.band=='10m') & ((contest.dx=='4D3X') |(contest.dx=='4E1AGW')|(contest.dx=='4F3BZ'))]
+```
+
+So with our HP, LP and QRP Data sets.... we ask the question
+
+**Which skimmmer node heard a HP&QRP station in the same 5 minute window ?** 
+
+Well for HP&QRP there are 153 matching records.
+
+So we now ask... **Did Any QRP Station get received stronger than an HP station in the same time period ?** 
+
+That is expressed like this
+
+```python
+HP_vs_QRP=pd.merge(DU_HP,DU_QRP,on=['callsign','date_rounded_5m'],how='inner')[['date_rounded_5m','callsign','freq_x','dx_x','dx_y','db_x','db_y']]
+HP_vs_QRP[HP_vs_QRP.db_y >= HP_vs_QRP.db_x]
+```
+
+## HP surprise
+
+Now, I would have thought this would yield no records ... but .... 
+
+|     | date_rounded_5m     | callsign   |   freq_x | dx_x   |   freq_y | dx_y   |   db_x |   db_y |
+|----:|:--------------------|:-----------|---------:|:-------|---------:|:-------|-------:|-------:|
+|  16 | 2022-05-28 08:50:00 | VK6ANC     |  28037.6 | DV3A   |  28019.9 | 4F3OM  |     22 |     25 |
+|  36 | 2022-05-28 10:30:00 | VU3KAZ     |  28024.4 | DU3T   |  28032   | 4F3OM  |     21 |     21 |
+|  48 | 2022-05-28 10:50:00 | BG4WOM     |  28024.7 | DU3T   |  28032.2 | 4F3OM  |     25 |     31 |
+|  49 | 2022-05-28 10:50:00 | BG4WOM     |  28053.5 | DV3A   |  28032.2 | 4F3OM  |     24 |     31 |
+|  61 | 2022-05-28 11:00:00 | BD7LAE     |  28024.4 | DU3T   |  28039.9 | 4F3OM  |     32 |     32 |
+| 141 | 2022-05-30 06:30:00 | VK4CT      |  28002.1 | DV3A   |  28032.9 | 4F3OM  |     13 |     14 |
 
 
+I will explain the 1st line.
 
-## Low Power 
+@2022-05-28 08:50:00, VK6ANC heard on (freq_x) 28037.6 call DV3A at strength (db_x) 22 dB, it also heard on (freq_y) 28019.9 call 4F3OM at strength (db_y) 25 dB.
 
-There is only 1 LP 10M only station, 4F3BZ. Nice station, and operator; I often hear them in the background (like most of the DU1 stations they are in my dead zone).
+This is most impressive for a QRP station - look they are over 6 dB stronger going into BG4WOM than DU3T and DV3A.
 
+## LP 
 
-#### 4F3BZ Spots by Country
+Having seen very poorly configured HP stations, do the LP stations suffer from the same issue.
 
-| SpotterCountry   |   Country |
-|:-----------------|----------:|
-| China            |        10 |
-| Japan            |         9 |
-| India            |         5 |
-| Bulgaria         |         2 |
-| Canary Islands   |         1 |
-| Lithuania        |         1 |
-| Romania          |         1 |
-| Samoa            |         1 |
-| West Malaysia    |         1 |
+This is the code
 
-
-## QRP Power
-
-There are two most excellent DU QRP stations listed in the RAW scores... so let us check them.
-
-#### 4I1EBC Spots by Country
-
-Very impressive, if I were 4F3BZ or DU1EV I would be very jealous of those spots. Canary Islands is particularly impressive for a QRP station, especially in contest conditions. Well done. 
-
-|    | SpotterCountry       |   when |
-|---:|:---------------------|-------:|
-|  0 | Australia            |      9 |
-|  1 | Bulgaria             |      1 |
-|  2 | Canary Islands       |      1 |
-|  3 | China                |     80 |
-|  4 | Denmark              |      1 |
-|  5 | European Russia      |      1 |
-|  6 | Fed. Rep. of Germany |      1 |
-|  7 | India                |     15 |
-|  8 | Japan                |     34 |
-|  9 | Lithuania            |      1 |
-| 10 | Mauritius            |      1 |
-| 11 | Thailand             |      3 |
-
-#### 4F3OM Spots by Country
-
-|    | SpotterCountry   |   when |
-|---:|:-----------------|-------:|
-|  0 | Australia        |      2 |
-|  1 | China            |     97 |
-|  2 | Czech Republic   |      1 |
-|  3 | European Russia  |      1 |
-|  4 | India            |      7 |
-|  5 | Japan            |     38 |
-|  6 | Philippines      |      1 |
-
-More China than the other QRP station, but less EU. Still very impressive to get into EU on QRP during a contest.
-
-
-#### YB3BOA Spots by country
-
-|    | SpotterCountry       |   when |
-|---:|:---------------------|-------:|
-|  0 | Australia            |      3 |
-|  1 | China                |      7 |
-|  2 | Fed. Rep. of Germany |      1 |
-|  3 | India                |      3 |
-|  4 | Japan                |      6 |
-|  5 | Thailand             |      2 |
-
-Amazing there are only 2 Thai spots (maybe no Skimmers there), but 1 spot into Germany is excellent.
-
-
-#Compare by power.
-
-Sadly at the moment, there is no way of creating a benchmark of receiver station signals. There could be different antenna, pre-amps, coax etc... 
-
-As the **Data Line** (explained earlier) shows RxDb - lets change the queries to see how loud some stations are.
-
-My own station runs the following
-
-  - 400W
-  - Antennas
-    - 4 Element Yagi
-      - Elevation 20m 
-    - 5 Element Yagi 
-      - Elevation 21m
+```python
+LP_vs_QRP=pd.merge(DU_LP,DU_QRP,on=['callsign','date_rounded_5m'],how='inner')[['date_rounded_5m','callsign','freq_x','dx_x','freq_y','dx_y','db_x','db_y']]
+df_to_md(LP_vs_QRP[LP_vs_QRP.db_y >= LP_vs_QRP.db_x])
+```
  
-I suspect my antenna has a gain of aprox 5.85dB - so my 400W input should be an ERP of aprox 1100W of an isotropic antenna.
+|    | date_rounded_5m     | callsign   |   freq_x | dx_x   |   freq_y | dx_y   |   db_x |   db_y |
+|---:|:--------------------|:-----------|---------:|:-------|---------:|:-------|-------:|-------:|
+| 30 | 2022-05-29 14:00:00 | JH7CSU1    |  28009.2 | 4F3BZ  |  28040.1 | 4F3OM  |     12 |     21 |
+| 34 | 2022-05-29 14:30:00 | JA4ZRK     |  28033   | 4F3BZ  |  28001   | 4F3OM  |      3 |      8 |
+| 46 | 2022-05-29 16:05:00 | JH7CSU1    |  28034.1 | 4F3BZ  |  28023.6 | 4F3OM  |     18 |     20 |
+| 47 | 2022-05-29 16:10:00 | VU3KAZ     |  28034   | 4F3BZ  |  28023.5 | 4F3OM  |     15 |     17 |
 
 
-### DV3A Country by Max Received Signal
+Sadly this again shows 4F3BZ has issues in their transmission system compared to the mighty 4F3OM. being over powered by over 7db in some cases !! 
 
-|    | SpotterCountry       |   Band |   sigdb |
-|---:|:---------------------|-------:|--------:|
-|  0 | India                |     10 |      48 |
-|  1 | China                |     10 |      40 |
-|  2 | Japan                |     10 |      33 |
-|  3 | Fed. Rep. of Germany |     10 |      24 |
-|  4 | Hungary              |     10 |      20 |
-|  5 | Australia            |     10 |      16 |
-|  6 | Samoa                |     10 |       9 |
-|  7 | Czech Republic       |     10 |       8 |
-|  8 | Namibia              |     10 |       3 |
-|  9 | Republic of Korea    |     10 |       0 |
-| 10 | Brazil               |     10 |      -1 |
-
-I suspect the Indian station has a pre-amp, as working VU is quite tricky. But China, Germany were all good copies, Brazil being very difficult this time around (-1 indicates a Manual spot - with no signal strength report).
-
-### DU1EV Country by Max Received Signal
-
-|    | SpotterCountry       |   Band |   sigdb |
-|---:|:---------------------|-------:|--------:|
-|  0 | Fed. Rep. of Germany |     10 |      21 |
-|  1 | Japan                |     10 |       0 |
-|  2 | Kazakhstan           |     10 |       0 |
-|  3 | Lithuania            |     10 |       0 |
-|  4 | Slovenia             |     10 |       0 |
-|  5 | Spain                |     10 |      -1 |
-
-Strange, only 1 automated Spot from Germany. 
-
-Sadly this tells me little - unless the operator was doing S&P all through the contest !
-
-### Low Power 
-
-### 4F3BZ Country by Max Received Signal
-
-| SpotterCountry   |   Band |   sigdb |
-|---:|:-----------------|-------:|--------:|
-|  0 | India            |     10 |      48 |
-|  1 | China            |     10 |      25 |
-|  2 | Japan            |     10 |      18 |
-|  3 | Canary Islands   |     10 |       7 |
-|  4 | Samoa            |     10 |       7 |
-|  5 | West Malaysia    |     10 |       4 |
-|  6 | Bulgaria         |     10 |       0 |
-|  7 | Lithuania        |     10 |       0 |
-|  8 | Romania          |     10 |      -1 |
-
-Again I think we need to discount India. But China, Japan are good and strong. 
-
-DV3A was 40Db into China, 4F3BZ was 25. I was expecting a drop of 6Db (400W to 100W).... assuming antennas, coax etc are the same.
-
-DV3A was 33Db into Japan, 4F3BZ was 18Db. - expected this to be 27dB.
-
-
-### QRP 
-
-### 4I1EB Country by Max Received Signal
-
-|    | SpotterCountry       |   Band |   sigdb |
-|---:|:---------------------|-------:|--------:|
-|  0 | India                |     10 |      42 |
-|  1 | China                |     10 |      38 |
-|  2 | Japan                |     10 |      29 |
-|  3 | European Russia      |     10 |      21 |
-|  4 | Australia            |     10 |      14 |
-|  5 | Canary Islands       |     10 |       4 |
-|  6 | Mauritius            |     10 |       4 |
-|  7 | Bulgaria             |     10 |       0 |
-|  8 | Denmark              |     10 |       0 |
-|  9 | Fed. Rep. of Germany |     10 |       0 |
-| 10 | Lithuania            |     10 |       0 |
-| 11 | Thailand             |     10 |      -1 |
-
- Amazing figures - these numbers for China, Japan are just 3Db down from the HP 10M station DV3A.
- 
- 
-### 4F3OM Country by Max Received Signal
- 
-
-|    | SpotterCountry   |   Band |   sigdb |
-|---:|:-----------------|-------:|--------:|
-|  0 | India            |     10 |      31 |
-|  1 | China            |     10 |      30 |
-|  2 | Japan            |     10 |      19 |
-|  3 | Australia        |     10 |      12 |
-|  4 | European Russia  |     10 |       5 |
-|  5 | Czech Republic   |     10 |       4 |
-|  6 | Philippines      |     10 |       0 |
-
-Also amazingly good signals. 30Db into China, 19Db into Japan; Stronger than the low-powered station.
-
-
-
-# Conclusions
-
-Some amazing stations here in DU Land, especially those QRP. I do hope they publish some data on their setup, receiving systems etc; It would be very interesting reading.
-
-A Rx measuring project similar to DXCC beacons would be most useful, as would knowing what receiving antenna configurations the stations that are generating the Dx Spots possess.
-
-As I am a member of the RBN Group, I will make enquiries - I am sure this data is already known, and some stations may well caliberate their Rx levels already.
-
-*tempus breve est* 
+Interestingly 4D3X, was not overmatched - so this operator must be doing something corect.
 
