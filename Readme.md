@@ -293,7 +293,7 @@ DU_Spots_10M[DU_Spots_10M.callsign=='JI1HFJ'].groupby(['dx'])[['db']].max().sort
 
 I know the output power of DV3A - 400W, assuming all stations have more or less the same antenna gain (probably doing some dis-service to some stations).... this implies that 
 
-DU3T was running 1.2Kw - which sounds about correct for HP. 
+DU3T appears to have been running 1.2Kw - which sounds about correct for HP. 
 4D3X (5db Down on my signal) would be aprox 100W - which also sounds correct for LP.
 DU1EV was in the HP section, and had 4 Db more than me so - aprox 800W ? - sounds correct.
 
