@@ -177,3 +177,145 @@ Sadly this again shows 4F3BZ has issues in their transmission system compared to
 
 Interestingly 4D3X, was not overmatched - so this operator must be doing something corect.
 
+# Spot Station calibration
+
+Sadly there is no direct way of caliberating a spot from a skimmer station... but that does not mean we can not infer some data from them. The NCDXF Beacon network transmits 24 hours at known power levels of 100, 10, 1 and .1W. But the callsign is only send at full power ... so this is a known level.
+
+What beacon spots were received during the contest ?? 
+
+```
+# Lets just see the 10M band
+TenM = contest[contest.band=='10m']
+TenMBeacon=TenM[TenM['mode']=='NCDXF B']
+```
+
+During the contest there were 438 NCDXF Beacon spots.
+
+
+## Were any NCDXF Beacons also able to spot DU stations ?
+
+### HP 
+
+Because we already have filtered the HP records, this is very simple.
+
+```python
+pd.merge(TenMBeacon,DU_HP,on=['callsign'],how='inner')['callsign'].unique()
+```
+   - JI1HFJ
+   - HS/F8UKP
+   - VU3KAZ
+   - 9M2CNC
+   - DM5GG
+   - DF2CK
+
+These stations got NCDXF Beacon Spots as well as DU HP stations.
+
+### LP 
+
+Because we already have filtered the LP records, this is very simple.
+
+```python
+pd.merge(TenMBeacon,DU_LP,on=['callsign'],how='inner')['callsign'].unique()
+```
+   - JI1HFJ
+   - HS/F8UKP
+   - VU3KAZ
+   - 9M2CNC
+
+These stations got NCDXF Beacon Spots as well as DU LP stations.
+  
+## QRP
+
+```python
+pd.merge(TenMBeacon,DU_QRP,on=['callsign'],how='inner')['callsign'].unique()
+```
+  - JI1HFJ
+  - HS/F8UKP
+  - VU3KAZ
+
+## Lets See how Loud the beacons were received at 
+
+Using the QRP dataset, we intersect the Beacon dataset, filter and get Max signal strength.
+
+This equates to the following commands 
+
+```python
+pd.merge(TenMBeacon,DU_QRP,on=['callsign'],how='inner')[['callsign','dx_x','db_x']].groupby(['callsign','dx_x']).max()
+```
+
+| callsign   | dx_x   |   db_x |
+|:-----------|:-------|-------:|
+| HS/F8UKP   | 4X6TU  |      6 |
+| HS/F8UKP   | JA2IGY |     13 |
+| HS/F8UKP   | RR9O   |      6 |
+| HS/F8UKP   | VK6RBP |     16 |
+| HS/F8UKP   | VR2B   |     16 |
+| JI1HFJ     | JA2IGY |     24 |
+| JI1HFJ     | KH6RS  |     15 |
+| JI1HFJ     | VR2B   |     25 |
+| VU3KAZ     | 4X6TU  |     38 |
+| VU3KAZ     | 5Z4B   |     36 |
+| VU3KAZ     | JA2IGY |     25 |
+| VU3KAZ     | OH2B   |     28 |
+| VU3KAZ     | RR9O   |     29 |
+| VU3KAZ     | VK6RBP |     34 |
+| VU3KAZ     | VR2B   |     37 |
+| VU3KAZ     | ZS6DN  |     27 |
+
+
+VU3KAZ, has much higher readings than all other 10M stations - which is what we have seen already. But of most interest is the JA Beacon that is received in Japan by JI1HFJ at 24db.
+
+**|  5 | JI1HFJ     | JA2IGY |     24 |**
+
+I wonder how loud that station was heading the DU stations ??
+
+## JI1HFJ reception reports
+
+We just need to filter and to get the maximum per call. 
+
+```python
+DU_Spots_10M[DU_Spots_10M.callsign=='JI1HFJ'].groupby(['dx'])[['db']].max().sort_values(by=['db'],ascending=False).reset_index()
+```
+
+| dx     |   db |
+|:-------|-----:|
+| DU3T   |   36 |
+| DU1EV  |   34 |
+| DV3A   |   30 |
+| 4I1EBC |   27 |
+| 4D3X   |   25 |
+| 4F3OM  |   23 |
+| 4F3BZ  |   21 |
+| DU1WBX |   13 |
+| DU1VGX |    6 |
+| DU1WN  |    2 |
+
+
+I know the output power of DV3A - 400W, assuming all stations have more or less the same antenna gain (probably doing some dis-service to some stations).... this implies that 
+
+DU3T was running 1.2Kw - which sounds about correct for HP. 
+4D3X (5db Down on my signal) would be aprox 100W - which also sounds correct for LP.
+DU1EV was in the HP section, and had 4 Db more than me so - aprox 800W ? - sounds correct.
+
+4I1EBC, on the basis they are 3 db Less in power than my station, but as QRP (5W) is -18Db from 400W, so the only way they can make this up is by having 6db+18Db gain antenna. So 4I1EBC has an amazing 24dB 10m antenna !! WoW - I would love to see this.
+
+4F3OM, only need 18Db of antenna gain. An also impressive feat of engineering. 
+
+This can be visualized as 
+
+How loud was the station received by JI1HFJ, considering it heard the JA Beacon at 24dB.
+
+| dx     |   db |   KnownPower |   AntGain | Class   |
+|:-------|-----:|-------------:|----------:|:--------|
+| DU3T   |   36 |            0 |         6 | HP      |
+| DU1EV  |   34 |            0 |         6 | HP      |
+| DV3A   |   30 |          400 |         6 | HP      |
+| 4I1EBC |   27 |            0 |         6 | QRP     |
+| 4D3X   |   25 |          100 |         6 | LP      |
+| 4F3OM  |   23 |            0 |         6 | QRP     |
+| 4F3BZ  |   21 |          100 |         6 | LP      |
+| DU1WBX |   13 |            0 |         6 | LP      |
+| DU1VGX |    6 |            0 |         6 | LP      |
+| DU1WN  |    2 |            0 |         6 | LP      |
+
+
